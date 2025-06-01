@@ -1,0 +1,23 @@
+services:
+    chrome:
+        image: chromedp/headless-shell:latest
+        networks:
+            - primary
+        ports:
+            - "9222:9222"
+
+    scraper:
+        build:
+            context: .
+            target: base
+        env_file:
+            - .env
+        command: ./main
+        depends_on:
+            - chrome
+        networks:
+            - primary
+
+networks:
+    primary:
+        external: true
