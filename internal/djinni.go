@@ -45,6 +45,9 @@ func (d DjinniScraper) Scrape() error {
 			chromedp.Click(`form#signup button[type="submit"]`, chromedp.ByQuery),
 			chromedp.Sleep(2*time.Second),
 		)
+		if err != nil {
+			return err
+		}
 	}
 
 	page := 1
