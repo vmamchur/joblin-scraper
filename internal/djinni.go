@@ -22,22 +22,29 @@ type DjinniScraper struct {
 }
 
 func (d DjinniScraper) Scrape() error {
-	allocCtx, cancel := chromedp.NewRemoteAllocator(context.Background(), "http://chrome:9222/json/version")
-	defer cancel()
+	allocCtx, allocCancel := chromedp.NewRemoteAllocator(context.Background(), "http://chrome:9222/json/version")
+	defer allocCancel()
 
-	ctx, cancel := chromedp.NewContext(allocCtx)
-	defer cancel()
+	ctx, ctxCancel := chromedp.NewContext(allocCtx)
+	defer ctxCancel()
 
+	var currentUrl string
 	err := chromedp.Run(ctx,
 		chromedp.Navigate(baseUrl+"/login"),
-		chromedp.WaitVisible("form#signup", chromedp.ByQuery),
-		chromedp.SendKeys(`form#signup input[name="email"]`, d.email, chromedp.ByQuery),
-		chromedp.SendKeys(`form#signup input[name="password"]`, d.password, chromedp.ByQuery),
-		chromedp.Click(`form#signup button[type="submit"]`, chromedp.ByQuery),
-		chromedp.Sleep(2*time.Second),
+		chromedp.Location(&currentUrl),
 	)
 	if err != nil {
 		return err
+	}
+
+	if strings.Contains(currentUrl, "/login") {
+		err = chromedp.Run(ctx,
+			chromedp.WaitVisible("form#signup", chromedp.ByQuery),
+			chromedp.SendKeys(`form#signup input[name="email"]`, d.email, chromedp.ByQuery),
+			chromedp.SendKeys(`form#signup input[name="password"]`, d.password, chromedp.ByQuery),
+			chromedp.Click(`form#signup button[type="submit"]`, chromedp.ByQuery),
+			chromedp.Sleep(2*time.Second),
+		)
 	}
 
 	page := 1
@@ -71,7 +78,7 @@ func (d DjinniScraper) Scrape() error {
 			}
 
 			fullUrl := baseUrl + url
-			log.Printf("Processing: \"%s\" at \"%s\" (%s)", title, companyName, fullUrl)
+			log.Printf("Processing: %s", fullUrl)
 
 			_, err = d.q.CreateVacancy(ctx, generated.CreateVacancyParams{
 				Title: title,
@@ -82,11 +89,11 @@ func (d DjinniScraper) Scrape() error {
 				Url: fullUrl,
 			})
 			if err != nil {
-				log.Printf("Skipping creation - \"%s\" (%s)", title, fullUrl)
+				log.Printf("Error saving %s: %v", fullUrl, err)
 				continue
 			}
 
-			log.Printf("Saved: \"%s\" (%s)", title, fullUrl)
+			log.Printf("Saved: %s", fullUrl)
 		}
 
 		var isNextBtnVisible bool

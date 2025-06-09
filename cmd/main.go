@@ -7,6 +7,7 @@ import (
 
 	_ "github.com/joho/godotenv/autoload"
 	_ "github.com/lib/pq"
+	"github.com/robfig/cron/v3"
 	"github.com/vmamchur/joblin-scraper/config"
 	"github.com/vmamchur/joblin-scraper/db/generated"
 	scraper "github.com/vmamchur/joblin-scraper/internal"
@@ -32,6 +33,14 @@ func main() {
 
 	scraper := scraper.NewScraper(q, cfg.Djinni.Email, cfg.Djinni.Password)
 
-	log.Println("Scraper service running...")
 	scraper.Run()
+	c := cron.New()
+	c.AddFunc("0 * * * *", func() {
+		log.Println("Running scheduled scraper...")
+		scraper.Run()
+	})
+	c.Start()
+
+	log.Println("Scraper scheduler started. Running every hour.")
+	select {}
 }

@@ -11,7 +11,6 @@ type Scraper interface {
 }
 
 type ScraperService struct {
-	q        *generated.Queries
 	scrapers []Scraper
 }
 
