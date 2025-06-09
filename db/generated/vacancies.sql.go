@@ -7,7 +7,6 @@ package generated
 
 import (
 	"context"
-	"database/sql"
 )
 
 const createVacancy = `-- name: CreateVacancy :one
@@ -25,9 +24,9 @@ RETURNING id, created_at, updated_at, title, company_name, url
 `
 
 type CreateVacancyParams struct {
-	Title       string         `json:"title"`
-	CompanyName sql.NullString `json:"company_name"`
-	Url         string         `json:"url"`
+	Title       string `json:"title"`
+	CompanyName string `json:"company_name"`
+	Url         string `json:"url"`
 }
 
 func (q *Queries) CreateVacancy(ctx context.Context, arg CreateVacancyParams) (Vacancy, error) {

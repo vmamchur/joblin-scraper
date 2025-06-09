@@ -2,7 +2,6 @@ package scraper
 
 import (
 	"context"
-	"database/sql"
 	"fmt"
 	"log"
 	"strings"
@@ -84,12 +83,9 @@ func (d DjinniScraper) Scrape() error {
 			log.Printf("Processing: %s", fullUrl)
 
 			_, err = d.q.CreateVacancy(ctx, generated.CreateVacancyParams{
-				Title: title,
-				CompanyName: sql.NullString{
-					String: companyName,
-					Valid:  strings.TrimSpace(companyName) != "",
-				},
-				Url: fullUrl,
+				Title:       title,
+				CompanyName: companyName,
+				Url:         fullUrl,
 			})
 			if err != nil {
 				log.Printf("Error saving %s: %v", fullUrl, err)
