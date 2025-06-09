@@ -72,7 +72,7 @@ func (d DjinniScraper) Scrape() error {
 			err := chromedp.Run(ctx,
 				chromedp.Text(".job-item__title-link", &title, chromedp.ByQuery, chromedp.FromNode(node)),
 				chromedp.AttributeValue(".job-item__title-link", "href", &url, nil, chromedp.ByQuery, chromedp.FromNode(node)),
-				chromedp.Text(`[data-analytics="company_page"]`, &companyName, chromedp.ByQuery),
+				chromedp.Text(`a[data-analytics="company_page"]`, &companyName, chromedp.ByQuery, chromedp.AtLeast(0), chromedp.FromNode(node)),
 			)
 			if err != nil {
 				log.Printf("Skipping vacancy due to extraction error: %v", err)

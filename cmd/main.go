@@ -33,7 +33,9 @@ func main() {
 
 	scraper := scraper.NewScraper(q, cfg.Djinni.Email, cfg.Djinni.Password)
 
+	log.Println("Scraper scheduler started. Running every hour.")
 	scraper.Run()
+
 	c := cron.New()
 	c.AddFunc("0 * * * *", func() {
 		log.Println("Running scheduled scraper...")
@@ -41,6 +43,5 @@ func main() {
 	})
 	c.Start()
 
-	log.Println("Scraper scheduler started. Running every hour.")
 	select {}
 }
