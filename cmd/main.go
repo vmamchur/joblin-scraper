@@ -31,15 +31,15 @@ func main() {
 
 	q := generated.New(db)
 
-	scraper := scraper.NewScraper(q, cfg.Djinni.Email, cfg.Djinni.Password)
+	scraper := scraper.NewScraper(cfg.Djinni.Email, cfg.Djinni.Password)
 
-	log.Println("Scraper scheduler started. Running every hour.")
-	scraper.Run()
+	log.Println("Scraper scheduler started")
+	scraper.Run(q)
 
 	c := cron.New()
-	c.AddFunc("0 * * * *", func() {
+	c.AddFunc("*/15 * * * *", func() {
 		log.Println("Running scheduled scraper...")
-		scraper.Run()
+		scraper.Run(q)
 	})
 	c.Start()
 

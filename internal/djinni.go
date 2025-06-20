@@ -15,12 +15,17 @@ import (
 const baseUrl = "https://djinni.co"
 
 type DjinniScraper struct {
-	q        *generated.Queries
 	email    string
 	password string
 }
 
-func (d DjinniScraper) Scrape() error {
+func (d DjinniScraper) Name() string {
+	return "djinni"
+}
+
+func (d DjinniScraper) Scrape() ([]generated.CreateVacancyParams, error) {
+	scraperName := d.Name()
+
 	allocCtx, allocCancel := chromedp.NewRemoteAllocator(context.Background(), "http://chrome:9222/json/version")
 	defer allocCancel()
 
@@ -33,7 +38,7 @@ func (d DjinniScraper) Scrape() error {
 		chromedp.Location(&currentUrl),
 	)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	if strings.Contains(currentUrl, "/login") {
@@ -45,14 +50,16 @@ func (d DjinniScraper) Scrape() error {
 			chromedp.Sleep(2*time.Second),
 		)
 		if err != nil {
-			return err
+			return nil, err
 		}
+		log.Printf("[%s] Logged in successfully\n", scraperName)
 	}
 
+	vacancies := []generated.CreateVacancyParams{}
 	page := 1
 
 	for {
-		log.Printf("Navigating to page %d...", page)
+		log.Printf("[%s] Navigating to page %d...\n", scraperName, page)
 
 		var jobNodes []*cdp.Node
 		err = chromedp.Run(ctx,
@@ -61,10 +68,10 @@ func (d DjinniScraper) Scrape() error {
 			chromedp.Nodes("li[id^=job-item-]", &jobNodes, chromedp.ByQueryAll),
 		)
 		if err != nil {
-			return err
+			return nil, err
 		}
 
-		log.Printf("Found %d vacancies on page %d", len(jobNodes), page)
+		log.Printf("[%s] Found %d vacancies on page %d\n", scraperName, len(jobNodes), page)
 
 		for _, node := range jobNodes {
 			var title, url, companyName string
@@ -75,24 +82,17 @@ func (d DjinniScraper) Scrape() error {
 				chromedp.Text(`a[data-analytics="company_page"]`, &companyName, chromedp.ByQuery, chromedp.AtLeast(0), chromedp.FromNode(node)),
 			)
 			if err != nil {
-				log.Printf("Skipping vacancy due to extraction error: %v", err)
+				log.Printf("[%s] Skipping vacancy due to extraction error: %v\n", scraperName, err)
 				continue
 			}
 
 			fullUrl := baseUrl + url
-			log.Printf("Processing: %s", fullUrl)
-
-			_, err = d.q.CreateVacancy(ctx, generated.CreateVacancyParams{
+			vacancies = append(vacancies, generated.CreateVacancyParams{
 				Title:       title,
-				CompanyName: companyName,
 				Url:         fullUrl,
+				CompanyName: companyName,
 			})
-			if err != nil {
-				log.Printf("Error saving %s: %v", fullUrl, err)
-				continue
-			}
-
-			log.Printf("Saved: %s", fullUrl)
+			log.Printf("[%s] Collected vacancy: %s\n", scraperName, fullUrl)
 		}
 
 		var isNextBtnVisible bool
@@ -100,15 +100,14 @@ func (d DjinniScraper) Scrape() error {
 			chromedp.Evaluate(`document.querySelector('li.page-item:not(.disabled) a.page-link span.bi-chevron-right') !== null`, &isNextBtnVisible),
 		)
 		if err != nil {
-			return err
+			return nil, err
 		}
 		if !isNextBtnVisible {
-			log.Println("No more pages. Done scraping.")
 			break
 		}
 
 		page++
 	}
 
-	return nil
+	return vacancies, nil
 }
