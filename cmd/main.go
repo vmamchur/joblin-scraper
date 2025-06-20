@@ -10,7 +10,8 @@ import (
 	"github.com/robfig/cron/v3"
 	"github.com/vmamchur/joblin-scraper/config"
 	"github.com/vmamchur/joblin-scraper/db/generated"
-	scraper "github.com/vmamchur/joblin-scraper/internal"
+	"github.com/vmamchur/joblin-scraper/internal/broadcaster"
+	"github.com/vmamchur/joblin-scraper/internal/scraper"
 )
 
 func main() {
@@ -30,8 +31,9 @@ func main() {
 	defer db.Close()
 
 	q := generated.New(db)
+	tgBroadcaster := broadcaster.NewTelegramBroadcaster(cfg.TgBotUrl)
 
-	scraper := scraper.NewScraper(cfg.Djinni.Email, cfg.Djinni.Password)
+	scraper := scraper.NewScraper(tgBroadcaster, cfg.Djinni.Email, cfg.Djinni.Password)
 
 	log.Println("Scraper scheduler started")
 	scraper.Run(q)

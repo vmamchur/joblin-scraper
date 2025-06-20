@@ -6,9 +6,10 @@ import (
 )
 
 type Config struct {
-	Djinni DjinniConfig
+	TgBotUrl string
 
-	DB DBConfig
+	DB     DBConfig
+	Djinni DjinniConfig
 }
 
 type DBConfig struct {
@@ -27,10 +28,7 @@ type DjinniConfig struct {
 
 func Load() Config {
 	return Config{
-		Djinni: DjinniConfig{
-			Email:    mustEnv("DJINNI_EMAIL"),
-			Password: mustEnv("DJINNI_PASSWORD"),
-		},
+		TgBotUrl: mustEnv("TG_BOT_URL"),
 		DB: DBConfig{
 			Host:     mustEnv("DB_HOST"),
 			Port:     getEnv("DB_PORT", "5432"),
@@ -38,6 +36,10 @@ func Load() Config {
 			Password: mustEnv("DB_PASSWORD"),
 			Name:     mustEnv("DB_NAME"),
 			SSLMode:  getEnv("DB_SSLMODE", "disable"),
+		},
+		Djinni: DjinniConfig{
+			Email:    mustEnv("DJINNI_EMAIL"),
+			Password: mustEnv("DJINNI_PASSWORD"),
 		},
 	}
 }
