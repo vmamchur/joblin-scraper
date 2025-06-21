@@ -31,7 +31,7 @@ func main() {
 	defer db.Close()
 
 	q := generated.New(db)
-	tgBroadcaster := broadcaster.NewTelegramBroadcaster(cfg.TgBotUrl)
+	tgBroadcaster := broadcaster.NewTelegramBroadcaster(cfg.TgBotApiUrl, cfg.TgBotApiKey)
 
 	scraper := scraper.NewScraper(tgBroadcaster, cfg.Djinni.Email, cfg.Djinni.Password)
 

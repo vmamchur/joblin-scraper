@@ -6,7 +6,8 @@ import (
 )
 
 type Config struct {
-	TgBotUrl string
+	TgBotApiUrl string
+	TgBotApiKey string
 
 	DB     DBConfig
 	Djinni DjinniConfig
@@ -28,7 +29,8 @@ type DjinniConfig struct {
 
 func Load() Config {
 	return Config{
-		TgBotUrl: mustEnv("TG_BOT_URL"),
+		TgBotApiUrl: mustEnv("TG_BOT_API_URL"),
+		TgBotApiKey: mustEnv("TG_BOT_API_KEY"),
 		DB: DBConfig{
 			Host:     mustEnv("DB_HOST"),
 			Port:     getEnv("DB_PORT", "5432"),

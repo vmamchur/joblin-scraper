@@ -9,11 +9,12 @@ import (
 )
 
 type TelegramBroadcaster struct {
-	Endpoint string
+	ApiUrl string
+	ApiKey string
 }
 
-func NewTelegramBroadcaster(endpoint string) *TelegramBroadcaster {
-	return &TelegramBroadcaster{endpoint}
+func NewTelegramBroadcaster(apiUrl string, apiKey string) *TelegramBroadcaster {
+	return &TelegramBroadcaster{ApiUrl: apiUrl, ApiKey: apiKey}
 }
 
 func (tb TelegramBroadcaster) Broadcast(v generated.CreateVacancyParams) error {
@@ -28,7 +29,14 @@ func (tb TelegramBroadcaster) Broadcast(v generated.CreateVacancyParams) error {
 		return err
 	}
 
-	resp, err := http.Post(tb.Endpoint, "application/json", bytes.NewBuffer(data))
+	req, err := http.NewRequest("POST", tb.ApiUrl+"/broadcast", bytes.NewBuffer(data))
+	if err != nil {
+		return err
+	}
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("X-API-Key", tb.ApiKey)
+
+	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
 		return err
 	}
